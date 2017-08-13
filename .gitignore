@@ -1,13 +1,17 @@
 *.egg
 *.egg-info
 *.pyc
+*.ini
 *$py.class
 *~
 .coverage
+.coveragerc
 coverage.xml
 build/
 dist/
 .tox/
+acme/static/*/visualrdf*
+acme/static/*/lodlive*
 __pycache__
 nosetests.xml
 data/slm*
