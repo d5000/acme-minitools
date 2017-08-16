@@ -11,6 +11,7 @@
     <div class="ui simple dropdown item">
       <i class="yellow cubes icon"></i> Blocks <i class="dropdown icon"></i>
       <div class="menu">
+        ## <a class="item" href="${request.route_url('blocklist', arg=histoire[0][1][-1][0])|n}">Browse the recent blockchain</a>
         <a class="item" href="${request.route_url('blocklist', net=net, arg=coin['binfo']['blocks'])|n}">Browse the recent blockchain</a>
         <a class="item" href="${request.route_url('blockbrowser', net=net)|n}">Browse the blockgraph</a>
         <div class="divider"></div>
@@ -41,7 +42,8 @@
       <i class="yellow money icon"></i>Transactions <i class="dropdown icon"></i>
       <div class="menu">
         <a class="item" href="${request.route_url('transactions', net=net)|n}">Browse recent transactions</a>
-        ## <a class="item" href="${request.route_url('exchange', net=net)|n}">Exchange rate data</a>
+        <a class="item" href="${request.route_url('exchange', net=net)|n}">Exchange rate data</a>
+        <a class="item" href="${request.route_url('address', net=net, arg=burnaddress)|n}">Slimcoin Burn Address</a>
         %if net == 'main':
         %for i, addr in enumerate(list(filter(lambda x: x > '', coin['donationaddresses'].split('\n')))):
           <a class="item" href="${request.route_url('address', net=net, arg=addr)|n}">${coin['name']} Donation Address ${i+1}</a>
@@ -63,14 +65,15 @@
     <div class="ui simple dropdown item">
       <i class="yellow cubes icon"></i> Connections <i class="dropdown icon"></i>
       <div class="menu">
-        <a class="item" href="https://bitcointalk.org/index.php?topic=0.0">Discussion Thread</a>
-        <a class="item" href="https://github.com/${coin['name'].lower()}-project/${coin['name'].lower()}">Github</a>
-        <a class="item" href="https://twitter.com/${coin['name'].lower()}">#${coin['name'].lower()}coin @ Twitter</a>
+        <a class="item" href="https://bitcointalk.org/index.php?topic=613213.0">Discussion Thread</a>
+        <a class="item" href="https://github.com/slimcoin-project/Slimcoin">Github</a>
+        <a class="item" href="https://twitter.com/slmcoin">#slimcoin @ Twitter</a>
         <div class="item">
           <i class="dropdown icon"></i>
           Block Explorers
           <div class="menu transition hidden" tabindex="-1">
-            <a class="item" href="#">Placeholder</a>
+            <a class="item" href="https://bchain.info/SLM/">BChain.Info</a>
+            <a class="item" href="http://www.slimcoin.club/#blkexp">Slimcoin.club</a>
           </div>
         </div>
       </div>

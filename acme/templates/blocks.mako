@@ -27,6 +27,7 @@
         <th>Block</th>
         <th>Hash</th>
         <th>Diff</th>
+        <th>Minted</th>
         <th>Time (UTC)</th>
         <th>interval</th>
         <th>Tx# &middot; Value out</th>
@@ -38,6 +39,7 @@
       <td><i class="yellow cube icon"></i> ${bnum}</td>
       <td><a href="${request.route_url('block', net=net, arg=bhash)}">${bhash[:16]|n} ...</a></td>
       <td>${"{:.6f}".format(bdiff)|n}</td>
+      <td>${dict(burn='<i class="red fire icon"></i>',stake='<i class="blue laptop icon"></i>',work='<i class="green desktop icon"></i>').get(prooftype.split(' ')[0][9:], '<i class="yellow help circle outline"></i>')|n}</td>
       <td><span class="date time" title="${btime}">${btime}</span>&nbsp;&nbsp;(<span class="sotto muted">${btime}</span>)</td>
       <td>
       %if binterval < 0:

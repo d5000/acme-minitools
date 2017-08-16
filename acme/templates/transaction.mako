@@ -105,7 +105,11 @@
             <div class="content">
               <img class="right floated tiny ui image" src="${tx['qrcode']|n}" title="${tx['address']}" />
               <div class="ui small header">
+              % if tx['address'] == 'SfSLMCoinMainNetworkBurnAddr1DeTK5':
+                <i class="red theme icon" style="display:inline!important"></i> Sent-to-Burnaddress<br/><br/>
+              % else:
                 <i class="yellow ${'hashtag' if 'pubkeyhash' in tx['scriptPubKey'].get('type','pubkey') else 'key'} icon" style="display:inline!important"></i> Pay-to-${tx['scriptPubKey'].get('type','pubkey').capitalize()}<br/><br/>
+              %endif
               <span class="output">${tx['value']}</span>
               <span class="attr"> ${coin['symbol']}</span>
               </div>

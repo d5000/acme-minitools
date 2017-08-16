@@ -181,9 +181,9 @@
     <tbody>
       <tr>
         <td><span class="attr">${timestamp.strftime("%c")|n}</span></td>
-        <td>last mint: <span class="valcol">${str((now-coin.get('lastblocktime')).seconds)|n}s</span> ago,&nbsp;&nbsp;diff: <span class="valcol">${curpowdiff|n}</span></td>
-        <td>supply: <span class="valcol">${"{:.0f}".format(float(coin['binfo']['moneysupply']))}</span></td>
-        <td>nethash: <span class="valcol">${"{:.2f}".format(curhashrate)|n}</span> mh/s,&nbsp;&nbsp;nodes: <span class="valcol">${coin['binfo']['connections']}</span>
+        <td>last mint: <span class="valcol">${str((now-coin.get('lastblocktime')).seconds)|n}s</span> ago,&nbsp;&nbsp;pow/pob: <span class="valcol">${curpowdiff|n}</span>,&nbsp;&nbsp;pos: <span class="valcol">${curposdiff|n}</span></td>
+        <td>supply: <span class="valcol">${"{:.0f}".format(float(coin['binfo']['moneysupply']) - float(netburnedcoins))}</span>&nbsp;&nbsp;(mint: <span class="valcol">${"{:.0f}".format(float(coin['binfo']['moneysupply']))}</span>&nbsp;-&nbsp;burn: <span class="valcol">${"{:.0f}".format(float(netburnedcoins))}</span>)</td>
+        <td>nethash: <span class="valcol">${"{:.2f}".format(curhashrate * 1000)|n}</span> mh/s,&nbsp;&nbsp;nodes: <span class="valcol">${coin['binfo']['connections']}</span>
             </div>
         </td>
       </tr>
@@ -196,6 +196,7 @@
         <th>Block</th>
         <th>Hash</th>
         <th>Diff</th>
+        <th>Minted</th>
         <th>Time (UTC)</th>
         <th>interval</th>
         <th>Tx# &middot; Value out</th>
@@ -207,7 +208,8 @@
       <td><i class="yellow cube icon"></i> ${bnum}</td>
       <td><a href="${request.route_url('block', net=net, arg=bhash)}">${bhash[:16]} ...</a></td>
       <td>${"{:.6f}".format(bdiff)|n}</td>
-      <td><span class="date time" title="${btime.isoformat()}.000Z">${btime}</span>&nbsp;&nbsp;(<span class="muted sotto">${btime}</span>)</td>
+      <td>${dict(burn='<i class="red fire icon"></i>',stake='<i class="blue laptop icon"></i>',work='<i class="green desktop icon"></i>').get(prooftype.split(' ')[0][9:], '<i class="yellow help circle outline icon"></i>')|n}</td>
+      <td><span class="time" title="${btime}">${btime}</span>&nbsp;&nbsp;(<span class="muted sotto">${btime}</span>)</td>
       <td>
       %if binterval < 0:
         <span class="neg"><time>${"{:<+.0f}".format(binterval)|n}</time></span>
