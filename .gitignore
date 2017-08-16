@@ -19,7 +19,8 @@ data/logs*
 acme/static/js/jquery_unused*
 acme/static/css/jquery_unused*
 env*/
-scripts*
+scripts/_rsync*
+scripts/rsync*
 acme/tests/schemas*
 tmp/
 Data.fs*
