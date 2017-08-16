@@ -1,0 +1,1135 @@
+@prefix as: <https://www.w3.org/ns/activitystreams#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/foo?page=1> a as:CollectionPage,
+        as:OrderedCollectionPage ;
+    as:items [ a as:Note ;
+            as:name "Another Simple Note" ],
+        ( [ a as:Note ;
+                as:name "A Simple Note" ] [ a as:Note ;
+                as:name "Another Simple Note" ] ),
+        [ a as:Note ;
+            as:name "A Simple Note" ] ;
+    as:partOf <http://example.org/foo> ;
+    as:summary "Page 1 of Ngaio's notes" .
+
+<http://help.example.org/question/1> a as:Question ;
+    as:content "I'd like to build a robot to feed my rabbit. Should I use Arduino or Raspberry Pi?" ;
+    as:name "A question about robots" .
+
+<http://www.test.example/object/1> a as:Object ;
+    as:name "A Simple, non-specific object" .
+
+<http://example.org/activities/122> a as:Accept ;
+    as:actor <acct:gjh@bel-epa.com> ;
+    as:context <http://example.org/connections/123> ;
+    as:inReplyTo <http://example.org/connection-requests/123> ;
+    as:object <http://example.org/connection-requests/123> ;
+    as:result <http://example.org/activities/123>,
+        <http://example.org/activities/124>,
+        <http://example.org/activities/125>,
+        <http://example.org/activities/126> ;
+    as:summary "Graham accepted Ngaio's friend request" .
+
+<http://www.test.example/notes/1> a as:Note ;
+    as:content "I am fine." ;
+    as:replies [ a as:Collection ;
+            as:items [ a as:Note ;
+                    as:content "I am glad to hear it." ;
+                    as:inReplyTo <http://www.test.example/notes/1> ;
+                    as:summary "A response to the note" ] ;
+            as:totalItems "1"^^xsd:nonNegativeInteger ] ;
+    as:summary "A simple note" .
+
+<http://activities.example.com/2> a as:Dislike,
+        as:Undo ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://activities.example.com/1>,
+        <http://notes.example.com/1> ;
+    as:published "2015-12-11T21:43:56+00:00"^^xsd:dateTime ;
+    as:summary "Ngaio disliked Graham's note",
+        "Ngaio no longer likes Graham's note" .
+
+<http://example.org/activities/123> a as:Follow ;
+    as:actor <acct:gjh@bel-epa.com> ;
+    as:context <http://example.org/connections/123> ;
+    as:object <acct:ncm@bel-epa.com> ;
+    as:summary "Graham followed Ngaio" .
+
+<http://example.org/activities/124> a as:Follow ;
+    as:actor <acct:ncm@bel-epa.com> ;
+    as:context <http://example.org/connections/123> ;
+    as:object <acct:gjh@bel-epa.com> ;
+    as:summary "Ngaio followed Graham" .
+
+<http://example.org/activities/125> a as:Add ;
+    as:actor <acct:gjh@bel-epa.com> ;
+    as:context <http://example.org/connections/123> ;
+    as:object <http://example.org/connections/123> ;
+    as:summary "Graham added Ngaio to his friends list" ;
+    as:target [ a as:Collection ;
+            as:summary "Graham's Connections" ] .
+
+<http://example.org/activities/126> a as:Add ;
+    as:actor <acct:ncm@bel-epa.com> ;
+    as:context <http://example.org/connections/123> ;
+    as:object <http://example.org/connections/123> ;
+    as:summary "Ngaio added Graham to her friends list" ;
+    as:target [ a as:Collection ;
+            as:summary "Ngaio's Connections" ] .
+
+<http://example.org/connection-requests/123> a as:Offer ;
+    as:actor <acct:ncm@bel-epa.com> ;
+    as:object <http://example.org/connections/123> ;
+    as:summary "Ngaio requested to be a friend of Graham" ;
+    as:target <acct:gjh@bel-epa.com> .
+
+<http://example.org/tags/givingthanks> as:name "#givingthanks" .
+
+<http://notes.example.com/1> a as:Note ;
+    as:attributedTo <https://bel-epa.com/~gjh> ;
+    as:content "A note",
+        "My note" ;
+    as:summary "A note",
+        "Graham's note" .
+
+<http://activities.example.com/1> a as:Create,
+        as:Like ;
+    as:actor <https://bel-epa.com/~gjh>,
+        <https://bel-epa.com/~ncm> ;
+    as:audience [ a as:Group ;
+            as:name "Project XYZ Working Group" ],
+        [ a as:Group ;
+            as:name "Project XYZ Working Group" ] ;
+    as:context [ a <http://example.org/Project> ;
+            as:name "Project XYZ" ],
+        [ a <http://example.org/Project> ;
+            as:name "Project XYZ" ] ;
+    as:object <http://notes.example.com/1> ;
+    as:published "2015-11-12T12:34:56+00:00"^^xsd:dateTime ;
+    as:summary "Graham liked Ngaio's note",
+        "Ngaio created a note",
+        "Ngaio liked Graham's note" ;
+    as:to <https://bel-epa.com/~gjh>,
+        <https://bel-epa.com/~ncm> .
+
+<http://example.org/collection?page=1> a as:CollectionPage ;
+    as:items [ a as:Note ;
+            as:name "Pizza Toppings to Try" ],
+        [ a as:Note ;
+            as:name "Thought about California" ] ;
+    as:partOf <http://example.org/collection> ;
+    as:summary "Page 1 of Ngaio's notes" .
+
+<http://example.org/foo> as:name "Foo" .
+
+<http://polls.example.org/question/1> a as:Question ;
+    as:content "I'd like to build a robot to feed my rabbit. Which platform is best?" ;
+    as:name "A question about robots" ;
+    as:oneOf [ as:name "arduino" ],
+        [ as:name "raspberry pi" ],
+        [ as:name "arduino" ],
+        [ as:name "raspberry pi" ] ;
+    as:replies [ a as:Collection ;
+            as:items [ as:attributedTo <http://joe.example.org/> ;
+                    as:inReplyTo <http://polls.example.org/question/1> ;
+                    as:name "arduino" ],
+                [ as:attributedTo <https://bel-epa.com/~gjh> ;
+                    as:inReplyTo <http://polls.example.org/question/1> ;
+                    as:name "raspberry pi" ],
+                [ as:attributedTo <https://bel-epa.com/~ncm> ;
+                    as:inReplyTo <http://polls.example.org/question/1> ;
+                    as:name "arduino" ] ;
+            as:totalItems "3"^^xsd:nonNegativeInteger ] ;
+    as:result [ a as:Note ;
+            as:content "Users are favoriting &quot;arduino&quot; by a 33% margin." ] .
+
+<http://example.org/connections/123> a as:Relationship ;
+    as:object <acct:gjh@bel-epa.com> ;
+    as:relationship <http://purl.org/vocab/relationship/friendOf> ;
+    as:subject <acct:ncm@bel-epa.com> ;
+    as:summary "Ngaio and Graham's friendship" .
+
+<https://bel-epa.com/~ncm> a as:Person ;
+    as:name "Ngaio" ;
+    as:summary "Ngaio" .
+
+[] a as:Collection ;
+    as:items <http://activities.example.com/1> ;
+    as:summary "Activities in Project XYZ" .
+
+[] a as:Tombstone ;
+    as:deleted "2016-05-03T00:00:00+00:00"^^xsd:dateTime ;
+    as:summary "This image has been deleted" .
+
+[] a as:Image ;
+    as:name "Rabbit Jumping on Wagon" ;
+    as:url [ a as:Link ;
+            as:href <http://example.org/image.png> ;
+            as:mediaType "image/png" ],
+        [ a as:Link ;
+            as:href <http://example.org/image.jpeg> ;
+            as:mediaType "image/jpeg" ] .
+
+[] a as:Announce ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object [ a as:Arrive ;
+            as:actor <https://bel-epa.com/~ncm> ;
+            as:location [ a as:Place ;
+                    as:name "Work" ] ] ;
+    as:summary "Ngaio announced that she had arrived at work" .
+
+[] a as:Note ;
+    as:content "Thank you <a href='https://bel-epa.com/~ncm'>@ngaio</a> for all your hard work! <a href='http://example.org/tags/givingthanks'>#givingthanks</a>" ;
+    as:name "A thank-you note" ;
+    as:tag <http://example.org/tags/givingthanks> ;
+    as:to <https://bel-epa.com/~ncm> .
+
+[] a as:Listen ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:instrument [ a as:Service ;
+            as:name "Acme Music Service" ] ;
+    as:object <http://example.org/foo.mp3> ;
+    as:summary "Ngaio listened to a piece of music on the Acme Music Service" .
+
+[] a as:Move ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/posts/1> ;
+    as:origin [ a as:Collection ;
+            as:name "List A" ] ;
+    as:summary "Ngaio moved a post from List A to List B" ;
+    as:target [ a as:Collection ;
+            as:name "List B" ] .
+
+[] a as:Tombstone ;
+    as:formerType <file:///home/gjh/minkiz/fabshop/SlimCoinWork/explorers/acme/acme/acme/tests/Image> ;
+    as:summary "This image has been deleted" ;
+    as:url <http://example.org/image/2> .
+
+[] a as:Organization ;
+    as:name "Example Co." .
+
+[] a as:Dislike ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio disliked a post" .
+
+[] a as:Place ;
+    as:latitude "36.75"^^xsd:float ;
+    as:longitude "119.7667"^^xsd:float ;
+    as:name "Fresno Area" ;
+    as:radius "15"^^xsd:float ;
+    as:units "miles" .
+
+[] a as:Event ;
+    as:endTime "2015-01-01T06:00:00-08:00"^^xsd:dateTime ;
+    as:name "Going-Away Party for Jim" ;
+    as:startTime "2014-12-31T23:00:00-08:00"^^xsd:dateTime .
+
+[] a as:Document ;
+    as:name "4Q Sales Forecast" ;
+    as:url [ a as:Link ;
+            as:href <http://example.org/4q-sales-forecast.pdf> ] .
+
+[] a as:Collection ;
+    as:first [ a as:Link ;
+            as:href <http://example.org/collection?page=0> ;
+            as:summary "First Page" ] ;
+    as:summary "Ngaio's blog posts" ;
+    as:totalItems "3"^^xsd:nonNegativeInteger .
+
+[] a as:Link ;
+    as:href <http://example.org/abc> ;
+    as:hreflang "en" ;
+    as:mediaType "text/html" ;
+    as:name "Previous" .
+
+[] a as:Place ;
+    as:name "Work" .
+
+[] a as:Note ;
+    as:content "This is all there is." ;
+    as:generator [ a as:Application ;
+            as:name "Exampletron 3000" ] ;
+    as:summary "A simple note" .
+
+[] a as:Link ;
+    as:href <http://example.org/abc> ;
+    as:hreflang "en" ;
+    as:mediaType "text/html" ;
+    as:name "Preview" ;
+    as:rel "canonical",
+        "preview" .
+
+[] a as:CollectionPage ;
+    as:items <http://example.org/posts/1>,
+        <http://example.org/posts/2>,
+        <http://example.org/posts/3> ;
+    as:next <http://example.org/collection?page=2> ;
+    as:summary "Page 2 of Ngaio's blog posts" .
+
+[] a as:Create ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Note ;
+            as:content "This is a simple note" ;
+            as:name "A Simple Note" ] ;
+    as:summary "Ngaio created a note" .
+
+[] a as:Question ;
+    as:anyOf [ a as:Note ;
+            as:name "Option B" ],
+        [ a as:Note ;
+            as:name "Option A" ] ;
+    as:name "What is the answer?" .
+
+[] a as:Relationship ;
+    as:object [ a as:Person ;
+            as:name "Graham" ] ;
+    as:relationship <http://purl.org/vocab/relationship/acquaintanceOf> ;
+    as:subject [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:summary "Ngaio is an acquaintance of Graham" .
+
+[] a as:Profile ;
+    as:describes [ a as:Person ;
+            as:name "Ngaio Smith" ] ;
+    as:summary "Ngaio's Profile" .
+
+[] a as:Link ;
+    as:href <http://example.org/abc> ;
+    as:mediaType "text/html" ;
+    as:name "Previous" .
+
+[] a as:Collection ;
+    as:items [ a as:Relationship ;
+            as:object [ a as:Person ;
+                    as:name "Jane" ] ;
+            as:relationship <http://purl.org/vocab/relationship/friendOf> ;
+            as:subject [ a as:Person ;
+                    as:name "Ngaio" ] ;
+            as:summary "Ngaio is a friend of Jane" ],
+        [ a as:Relationship ;
+            as:object [ a as:Person ;
+                    as:name "Joe" ] ;
+            as:relationship <http://purl.org/vocab/relationship/influencedBy> ;
+            as:subject [ a as:Person ;
+                    as:name "Ngaio" ] ;
+            as:summary "Ngaio is influenced by Joe" ] ;
+    as:summary "Ngaio's friends list" .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio offered the post to Graham" ;
+    as:target [ a as:Person ;
+            as:name "Graham" ] .
+
+[] a as:Collection ;
+    as:current [ a as:Link ;
+            as:href <http://example.org/collection> ;
+            as:summary "Most Recent Items" ] ;
+    as:items <http://example.org/posts/1>,
+        <http://example.org/posts/2>,
+        <http://example.org/posts/3> ;
+    as:summary "Ngaio's blog posts" ;
+    as:totalItems "3"^^xsd:nonNegativeInteger .
+
+[] a as:Place ;
+    as:name "San Francisco, CA" .
+
+[] a as:Image ;
+    as:attributedTo [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:name "My rabbit taking a nap" ;
+    as:url <http://example.org/rabbit.jpeg> .
+
+[] a as:Profile ;
+    as:describes [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:summary "Ngaio's profile" ;
+    as:url <https://bel-epa.com/~ncm> .
+
+[] a as:Note ;
+    as:content "Thank you @ngaio for all your hard work! #givingthanks" ;
+    as:name "A thank-you note" ;
+    as:tag [ a as:Mention ;
+            as:href <http://example.org/people/ngaio> ;
+            as:name "@ngaio" ],
+        <http://example.org/tags/givingthanks> .
+
+[] a as:Note ;
+    as:content "A <em>simple</em> note"@en,
+        "Una nota <em>sencilla</em>"@es,
+        "一段<em>简单的</em>笔记"@zh-Hans ;
+    as:summary "A simple note" .
+
+[] a as:OrderedCollectionPage ;
+    as:items ( [ a as:Note ;
+                as:name "Density of Water" ] [ a as:Note ;
+                as:name "Air Mattress Idea" ] ) ;
+    as:startIndex "0"^^xsd:nonNegativeInteger ;
+    as:summary "Page 1 of Ngaio's notes" .
+
+[] a as:Create ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object [ a as:Relationship ;
+            as:object <http://matt.example.org/> ;
+            as:relationship <http://purl.org/vocab/relationship/friendOf> ;
+            as:startTime "2015-04-21T12:34:56"^^xsd:dateTime ;
+            as:subject <https://bel-epa.com/~ncm> ] ;
+    as:summary "Ngaio became a friend of Matt" .
+
+[] a as:Remove ;
+    as:actor [ a <http://example.org/Role> ;
+            as:name "The Moderator" ] ;
+    as:object [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:origin [ a as:Group ;
+            as:name "A Simple Group" ] ;
+    as:summary "The moderator removed Ngaio from a group" .
+
+[] a as:Collection ;
+    as:last <http://example.org/collection?page=1> ;
+    as:summary "A collection" ;
+    as:totalItems "3"^^xsd:nonNegativeInteger .
+
+[] a as:Reject ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Invite ;
+            as:actor <https://bel-epa.com/~gjh> ;
+            as:object [ a as:Event ;
+                    as:name "Going-Away Party for Jim" ] ] ;
+    as:summary "Ngaio rejected an invitation to a party" .
+
+[] a as:Travel ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:summary "Ngaio went to work" ;
+    as:target [ a as:Place ;
+            as:name "Work" ] .
+
+[] a as:Accept ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Invite ;
+            as:actor <https://bel-epa.com/~gjh> ;
+            as:object [ a as:Event ;
+                    as:name "Going-Away Party for Jim" ] ] ;
+    as:summary "Ngaio accepted an invitation to a party" .
+
+[] a as:Delete ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/notes/1> ;
+    as:origin [ a as:Collection ;
+            as:name "Ngaio's Notes" ] ;
+    as:summary "Ngaio deleted a note" .
+
+[] a as:Travel ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:origin [ a as:Place ;
+            as:name "Work" ] ;
+    as:summary "Ngaio went home from work" ;
+    as:target [ a as:Place ;
+            as:name "Home" ] .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:bcc <http://joe.example.org/> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio offered a post to Graham" ;
+    as:target <https://bel-epa.com/~gjh> .
+
+[] a as:Undo ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object [ a as:Offer ;
+            as:actor <https://bel-epa.com/~ncm> ;
+            as:object <http://example.org/posts/1> ;
+            as:target <https://bel-epa.com/~gjh> ] ;
+    as:summary "Ngaio retracted her offer to Graham" .
+
+[] a as:OrderedCollection ;
+    as:items ( [ a as:Note ;
+                as:name "A Simple Note" ] [ a as:Note ;
+                as:name "Another Simple Note" ] ) ;
+    as:summary "Ngaio's notes" ;
+    as:totalItems "2"^^xsd:nonNegativeInteger .
+
+[] a as:Place ;
+    as:latitude "36.75"^^xsd:float ;
+    as:longitude "119.7667"^^xsd:float ;
+    as:name "Fresno Area" ;
+    as:radius "15"^^xsd:float ;
+    as:units "miles" .
+
+[] a as:Note ;
+    as:content "This is all there is." ;
+    as:image [ a as:Image ;
+            as:name "A Rabbit" ;
+            as:url <http://example.org/rabbit.png> ] ;
+    as:name "A simple note" .
+
+[] a as:Note ;
+    as:content "This is all there is." ;
+    as:image [ a as:Image ;
+            as:name "Rabbit 1" ;
+            as:url <http://example.org/rabbit1.png> ],
+        [ a as:Image ;
+            as:name "Rabbit 2" ;
+            as:url <http://example.org/rabbit2.png> ] ;
+    as:name "A simple note" .
+
+[] a as:Collection ;
+    as:items <http://example.org/activities/122>,
+        <http://example.org/activities/123>,
+        <http://example.org/activities/124>,
+        <http://example.org/activities/125>,
+        <http://example.org/activities/126> ;
+    as:summary "Ngaio and Graham's relationship history" .
+
+[] a as:Note ;
+    as:content "This is all there is." ;
+    as:icon [ a as:Image ;
+            as:height "16"^^xsd:nonNegativeInteger ;
+            as:name "Note icon" ;
+            as:url <http://example.org/note.png> ;
+            as:width "16"^^xsd:nonNegativeInteger ] ;
+    as:summary "A simple note" .
+
+[] a as:Link ;
+    as:height "100"^^xsd:nonNegativeInteger ;
+    as:href <http://example.org/image.png> ;
+    as:width "100"^^xsd:nonNegativeInteger .
+
+[] a as:CollectionPage ;
+    as:items <http://example.org/posts/1>,
+        <http://example.org/posts/2>,
+        <http://example.org/posts/3> ;
+    as:next [ a as:Link ;
+            as:href <http://example.org/collection?page=2> ;
+            as:name "Next Page" ] ;
+    as:summary "Page 2 of Ngaio's blog posts" .
+
+[] a as:Collection ;
+    as:last [ a as:Link ;
+            as:href <http://example.org/collection?page=1> ;
+            as:summary "Last Page" ] ;
+    as:summary "A collection" ;
+    as:totalItems "5"^^xsd:nonNegativeInteger .
+
+[] a as:Remove ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/notes/1> ;
+    as:summary "Ngaio removed a note from her notes folder" ;
+    as:target [ a as:Collection ;
+            as:name "Notes Folder" ] .
+
+[] a as:Join ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Group ;
+            as:name "A Simple Group" ] ;
+    as:summary "Ngaio joined a group" .
+
+[] a <http://www.verbs.example/Check>,
+        as:Activity ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/flights/1> ;
+    as:result [ a <http://www.types.example/flightstatus> ;
+            as:name "On Time" ] ;
+    as:summary "Ngaio checked that her flight was on time" .
+
+[] a as:Note ;
+    as:content "A simple note" ;
+    as:icon [ a as:Image ;
+            as:height "16"^^xsd:nonNegativeInteger ;
+            as:summary "Note (16x16)" ;
+            as:url <http://example.org/note1.png> ;
+            as:width "16"^^xsd:nonNegativeInteger ],
+        [ a as:Image ;
+            as:height "32"^^xsd:nonNegativeInteger ;
+            as:summary "Note (32x32)" ;
+            as:url <http://example.org/note2.png> ;
+            as:width "32"^^xsd:nonNegativeInteger ] ;
+    as:summary "A simple note" .
+
+[] a as:Note ;
+    as:name "Cane Sugar Processing" ;
+    as:summary "A simple <em>note</em>" .
+
+[] a as:Note ;
+    as:content "This is all there is." ;
+    as:inReplyTo <http://example.org/posts/1> ;
+    as:summary "A simple note" .
+
+[] a as:Note ;
+    as:name "A simple note" .
+
+[] a as:Flag ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object [ a as:Note ;
+            as:content "An inappropriate note" ] ;
+    as:summary "Ngaio flagged an inappropriate note" .
+
+[] a as:Block ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://joe.example.org/> ;
+    as:summary "Ngaio blocked Joe" .
+
+[] a as:Leave ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Group ;
+            as:name "A Simple Group" ] ;
+    as:summary "Ngaio left a group" .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/foo> ;
+    as:summary "Ngaio offered the Foo object" .
+
+[] a as:Like ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object [ a as:Note ;
+            as:content "That is a tree." ;
+            as:summary "A simple note" ],
+        <http://example.org/posts/1> ;
+    as:summary "Ngaio liked a note" .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/foo> ;
+    as:summary "Ngaio offered the Foo object" .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio offered the post to Graham" ;
+    as:target <https://bel-epa.com/~gjh> ;
+    as:to <http://joe.example.org/> .
+
+[] a as:Collection ;
+    as:items <http://activities.example.com/1>,
+        <http://activities.example.com/2> ;
+    as:summary "History of Graham's note" .
+
+[] a as:Collection ;
+    as:items [ a as:Note ;
+            as:name "Something to Remember" ],
+        [ a as:Note ;
+            as:name "Which Staircase Should I Use" ] ;
+    as:summary "Ngaio's notes" ;
+    as:totalItems "2"^^xsd:nonNegativeInteger .
+
+[] a as:Update ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/notes/1> ;
+    as:summary "Ngaio updated her note" .
+
+[] a as:Note ;
+    as:content "Mush it up so it does not have the same shape as the can." ;
+    as:name "Cranberry Sauce Idea" ;
+    as:updated "2014-12-12T12:12:12+00:00"^^xsd:dateTime .
+
+[] a as:Note ;
+    as:content "Looks like it is going to rain today. Bring an umbrella!" ;
+    as:name "A Word of Warning" .
+
+[] a as:Add ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/abc> ;
+    as:summary "Ngaio added an object" .
+
+[] a as:Collection ;
+    as:current <http://example.org/collection> ;
+    as:items <http://example.org/posts/1>,
+        <http://example.org/posts/2>,
+        <http://example.org/posts/3> ;
+    as:summary "Ngaio's blog posts" ;
+    as:totalItems "3"^^xsd:nonNegativeInteger .
+
+[] a as:Relationship ;
+    as:object [ a as:Person ;
+            as:name "Graham" ] ;
+    as:relationship <http://purl.org/vocab/relationship/acquaintanceOf> ;
+    as:subject [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:summary "Ngaio is an acquaintance of Graham's" .
+
+[] a as:Invite ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Event ;
+            as:name "A Party" ] ;
+    as:summary "Ngaio invited Graham and Lisa to a party" ;
+    as:target [ a as:Person ;
+            as:name "Graham" ],
+        [ a as:Person ;
+            as:name "Lisa" ] .
+
+[] a as:Audio ;
+    as:name "Interview With A Famous Technologist" ;
+    as:url [ a as:Link ;
+            as:href <http://example.org/podcast.mp3> ;
+            as:mediaType "audio/mp3" ] .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:cc <http://joe.example.org/> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio offered a post to Graham" ;
+    as:target <https://bel-epa.com/~gjh> .
+
+[] a as:Video ;
+    as:duration "PT2H"^^xsd:duration ;
+    as:name "Birds Flying" ;
+    as:url <http://example.org/video.mkv> .
+
+[] a as:Place ;
+    as:altitude "15.0"^^xsd:float ;
+    as:latitude "36.75"^^xsd:float ;
+    as:longitude "119.7667"^^xsd:float ;
+    as:name "Fresno Area" ;
+    as:units "miles" .
+
+[] a as:OrderedCollection ;
+    as:items ( [ a as:Note ;
+                as:name "Meeting 2016-11-17" ] [ a as:Note ;
+                as:name "Reminder for Going-Away Party" ] ) ;
+    as:summary "Ngaio's notes" ;
+    as:totalItems "2"^^xsd:nonNegativeInteger .
+
+[] a as:Place ;
+    as:latitude "37.7833"^^xsd:float ;
+    as:longitude "122.4167"^^xsd:float ;
+    as:name "San Francisco, CA" .
+
+[] a as:Person ;
+    as:name "Ngaio Smith" .
+
+[] a as:Note ;
+    as:name "A simple note"@en,
+        "Una nota sencilla"@es,
+        "一段简单的笔记"@zh-Hans .
+
+[] a as:Listen ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/music.mp3> ;
+    as:summary "Ngaio listened to a piece of music" .
+
+[] a as:Group ;
+    as:name "Big Beards of Austin" .
+
+[] a as:CollectionPage ;
+    as:items <http://example.org/posts/1>,
+        <http://example.org/posts/2>,
+        <http://example.org/posts/3> ;
+    as:prev [ a as:Link ;
+            as:href <http://example.org/collection?page=1> ;
+            as:name "Previous Page" ] ;
+    as:summary "Page 1 of Ngaio's blog posts" .
+
+[] a as:Arrive ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:location [ a as:Place ;
+            as:name "Work" ] ;
+    as:origin [ a as:Place ;
+            as:name "Home" ] ;
+    as:summary "Ngaio arrived at work" .
+
+[] a as:Collection ;
+    as:items [ a as:Offer ;
+            as:actor <https://bel-epa.com/~ncm> ;
+            as:context <http://example.org/contexts/1> ;
+            as:object <http://example.org/posts/1> ;
+            as:target <https://bel-epa.com/~gjh> ],
+        [ a as:Like ;
+            as:actor <http://joe.example.org/> ;
+            as:context <http://example.org/contexts/1> ;
+            as:object <http://example.org/posts/2> ] ;
+    as:summary "Activities in context 1" .
+
+[] a as:Event ;
+    as:endTime "2015-01-01T06:00:00-08:00"^^xsd:dateTime ;
+    as:name "Going-Away Party for Jim" ;
+    as:startTime "2014-12-31T23:00:00-08:00"^^xsd:dateTime .
+
+[] a as:Article ;
+    as:attributedTo <https://bel-epa.com/~ncm> ;
+    as:content "<div>... you will never believe ...</div>" ;
+    as:name "What a Crazy Day I Had" .
+
+[] a as:Link ;
+    as:height "100"^^xsd:nonNegativeInteger ;
+    as:href <http://example.org/image.png> ;
+    as:width "100"^^xsd:nonNegativeInteger .
+
+[] a as:Like ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio liked a post" .
+
+[] a as:Link ;
+    as:href <http://example.org/abc> ;
+    as:hreflang "en" ;
+    as:mediaType "text/html" ;
+    as:name "Next" .
+
+[] a as:Mention ;
+    as:href <http://example.org/joe> ;
+    as:name "Joe" ;
+    as:summary "Mention of Joe by Carrie in her note" .
+
+[] a as:Note ;
+    as:content "Fish swim." ;
+    as:published "2014-12-12T12:12:12+00:00"^^xsd:dateTime ;
+    as:summary "A simple note" .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio offered the post to Graham" ;
+    as:target <https://bel-epa.com/~gjh> .
+
+[] a as:Place ;
+    as:latitude "36.75"^^xsd:float ;
+    as:longitude "119.7667"^^xsd:float ;
+    as:name "Fresno Area" ;
+    as:radius "15"^^xsd:float ;
+    as:units "miles" .
+
+[] a as:Move ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object [ a as:Document ;
+            as:name "sales figures" ] ;
+    as:origin [ a as:Collection ;
+            as:name "Folder A" ] ;
+    as:summary "Ngaio moved the sales figures from Folder A to Folder B" ;
+    as:target [ a as:Collection ;
+            as:name "Folder B" ] .
+
+[] a as:TentativeReject ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Invite ;
+            as:actor <https://bel-epa.com/~gjh> ;
+            as:object [ a as:Event ;
+                    as:name "Going-Away Party for Jim" ] ] ;
+    as:summary "Ngaio tentatively rejected an invitation to a party" .
+
+[] a as:Place ;
+    as:accuracy "94.5"^^xsd:float ;
+    as:latitude "36.75"^^xsd:float ;
+    as:longitude "119.7667"^^xsd:float ;
+    as:name "Liu Gu Lu Cun, Pingdu, Qingdao, Shandong, China" .
+
+[] a as:Offer ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:bto <http://joe.example.org/> ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio offered a post to Graham" ;
+    as:target <https://bel-epa.com/~gjh> .
+
+[] a as:Service ;
+    as:name "Acme Web Service" .
+
+[] a as:Video ;
+    as:duration "PT2H30M"^^xsd:duration ;
+    as:name "Cool New Movie" ;
+    as:preview [ a as:Video ;
+            as:duration "PT1M"^^xsd:duration ;
+            as:name "Trailer" ;
+            as:url [ as:href <http://example.org/trailer.mkv> ;
+                    as:mediaType "video/mkv" ] ] .
+
+[] a as:CollectionPage ;
+    as:items <http://example.org/posts/1>,
+        <http://example.org/posts/2>,
+        <http://example.org/posts/3> ;
+    as:prev <http://example.org/collection?page=1> ;
+    as:summary "Page 1 of Ngaio's blog posts" .
+
+[] a as:Place ;
+    as:latitude "36.75"^^xsd:float ;
+    as:longitude "119.7667"^^xsd:float ;
+    as:name "Fresno Area" ;
+    as:radius "15"^^xsd:float ;
+    as:units "miles" .
+
+[] a as:Ignore ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/notes/1> ;
+    as:summary "Ngaio ignored a note" .
+
+[] a as:Image ;
+    as:summary "Picture of Ngaio" ;
+    as:tag <https://bel-epa.com/~ncm> ;
+    as:url <http://example.org/ngaio.jpg> .
+
+[] a as:Person ;
+    as:location [ a as:Place ;
+            as:altitude "90"^^xsd:float ;
+            as:latitude "56.78"^^xsd:float ;
+            as:longitude "12.34"^^xsd:float ;
+            as:name "Over the Arabian Sea, east of Socotra Island Nature Sanctuary" ;
+            as:units "m" ] ;
+    as:name "Ngaio" .
+
+[] a as:Move ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/posts/1> ;
+    as:origin [ a as:Collection ;
+            as:name "List A" ] ;
+    as:summary "Ngaio moved a post from List A to List B" ;
+    as:target [ a as:Collection ;
+            as:name "List B" ] .
+
+[] a as:Event ;
+    as:endTime "2015-01-01T06:00:00-08:00"^^xsd:dateTime ;
+    as:name "Going-Away Party for Jim" ;
+    as:startTime "2014-12-31T23:00:00-08:00"^^xsd:dateTime .
+
+[] a as:Relationship ;
+    as:object [ a as:Person ;
+            as:name "Graham" ] ;
+    as:relationship <http://purl.org/vocab/relationship/acquaintanceOf> ;
+    as:subject [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:summary "Ngaio is an acquaintance of Graham's" .
+
+[] a as:Note ;
+    as:name "Cane Sugar Processing" ;
+    as:summary "A simple <em>note</em>"@en,
+        "Una <em>nota</em> sencilla"@es,
+        "一段<em>简单的</em>笔记"@zh-Hans .
+
+[] a as:Document ;
+    as:name "4Q Sales Forecast" ;
+    as:url <http://example.org/4q-sales-forecast.pdf> .
+
+[] a as:Question ;
+    as:name "What is the answer?" ;
+    as:oneOf [ a as:Note ;
+            as:name "Option A" ],
+        [ a as:Note ;
+            as:name "Option B" ] .
+
+[] a as:Leave ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Place ;
+            as:name "Work" ] ;
+    as:summary "Ngaio left work" .
+
+[] a as:Like ;
+    as:actor <https://bel-epa.com/~ncm> ;
+    as:object [ a as:Note ;
+            as:content "A simple note" ] .
+
+[] a as:View ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Article ;
+            as:name "What You Should Know About Activity Streams" ] ;
+    as:summary "Ngaio read an article" .
+
+[] a as:Follow ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Person ;
+            as:name "Graham" ] ;
+    as:summary "Ngaio followed Graham" .
+
+[] a as:TentativeAccept ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Invite ;
+            as:actor <https://bel-epa.com/~gjh> ;
+            as:object [ a as:Event ;
+                    as:name "Going-Away Party for Jim" ] ] ;
+    as:summary "Ngaio tentatively accepted an invitation to a party" .
+
+[] a as:Note ;
+    as:attachment [ a as:Image ;
+            as:content "This is what he looks like." ;
+            as:url <http://example.org/rabbit.jpeg> ] ;
+    as:name "Have you seen my rabbit?" .
+
+[] a as:Document ;
+    as:name "4Q Sales Forecast" ;
+    as:url <http://example.org/4q-sales-forecast.pdf> .
+
+[] a as:Application ;
+    as:name "Exampletron 3000" .
+
+[] a as:Page ;
+    as:name "Omaha Weather Report" ;
+    as:url <http://example.org/weather-in-omaha.html> .
+
+[] a as:Collection ;
+    as:first <http://example.org/collection?page=0> ;
+    as:summary "Ngaio's blog posts" ;
+    as:totalItems "3"^^xsd:nonNegativeInteger .
+
+[] a <http://example.org/Foo> ;
+    as:summary "A foo" .
+
+[] a as:Link ;
+    as:href <http://example.org/abc> ;
+    as:hreflang "en" ;
+    as:mediaType "text/html" ;
+    as:name "An example link" .
+
+[] a as:Note ;
+    as:content "This is all there is." ;
+    as:inReplyTo [ a as:Note ;
+            as:content "What else is there?" ;
+            as:summary "Previous note" ] ;
+    as:summary "A simple note" .
+
+[] a as:Accept ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Person ;
+            as:name "Joe" ] ;
+    as:summary "Ngaio accepted Joe into the club" ;
+    as:target [ a as:Group ;
+            as:name "The Club" ] .
+
+[] a as:Read ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/posts/1> ;
+    as:summary "Ngaio read a blog post" .
+
+[] a as:Place ;
+    as:latitude "36.75"^^xsd:float ;
+    as:longitude "119.7667"^^xsd:float ;
+    as:name "Fresno Area" ;
+    as:radius "15"^^xsd:float ;
+    as:units "miles" .
+
+[] a as:Note ;
+    as:content "A <em>simple</em> note" ;
+    as:summary "A simple note" .
+
+[] a as:Image ;
+    as:attributedTo [ a as:Person ;
+            as:name "Ngaio" ],
+        <http://joe.example.org/> ;
+    as:name "My rabbit taking a nap" ;
+    as:url <http://example.org/rabbit.jpeg> .
+
+[] a as:Add ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Image ;
+            as:name "A picture of my rabbit" ;
+            as:url <http://example.org/img/rabbit.png> ] ;
+    as:origin [ a as:Collection ;
+            as:name "Camera Roll" ] ;
+    as:summary "Ngaio added a picture of her rabbit to her rabbit picture collection" ;
+    as:target [ a as:Collection ;
+            as:name "My Rabbit Pictures" ] .
+
+[] a as:Collection ;
+    as:items [ a as:Note ;
+            as:name "Meeting 2016-11-17" ],
+        [ a as:Note ;
+            as:name "Reminder for Going-Away Party" ] ;
+    as:summary "Ngaio's notes" ;
+    as:totalItems "2"^^xsd:nonNegativeInteger .
+
+[] a as:Note ;
+    as:audience [ a <http://example.org/Organization> ;
+            as:name "ExampleCo LLC" ] ;
+    as:content "Thursday will be a company-wide holiday. Enjoy your day off!" ;
+    as:name "Holiday announcement" .
+
+[] a as:Offer ;
+    as:actor <http://joe.example.org/>,
+        <https://bel-epa.com/~ncm> ;
+    as:object <http://example.org/foo> ;
+    as:summary "Ngaio and Joe offered the Foo object" .
+
+[] a as:Document ;
+    as:name "4Q Sales Forecast" ;
+    as:url [ a as:Link ;
+            as:href <http://example.org/4q-sales-forecast.pdf> ;
+            as:mediaType "application/pdf" ],
+        [ a as:Link ;
+            as:href <http://example.org/4q-sales-forecast.html> ;
+            as:mediaType "text/html" ] .
+
+[] a as:Collection ;
+    as:items [ a as:Note ;
+            as:name "Another Simple Note" ],
+        [ a as:Note ;
+            as:name "A Simple Note" ] ;
+    as:summary "Ngaio's notes" ;
+    as:totalItems "2"^^xsd:nonNegativeInteger .
+
+[] a as:Collection ;
+    as:items <http://activities.example.com/1>,
+        <http://activities.example.com/2> ;
+    as:summary "History of Graham's note" .
+
+[] a as:Offer ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a <http://www.types.example/ProductOffer> ;
+            as:name "50% Off!" ] ;
+    as:summary "Ngaio offered 50% off to Lewis" ;
+    as:target [ a as:Person ;
+            as:name "Lewis" ] .
+
+[] a as:Question ;
+    as:name "What is the answer?" ;
+    as:oneOf [ a as:Note ;
+            as:name "Option A" ],
+        [ a as:Note ;
+            as:name "Option B" ] .
+
+[] as:attributedTo <https://bel-epa.com/~ncm> ;
+    as:inReplyTo <http://polls.example.org/question/1> ;
+    as:name "arduino" .
+
+[] a as:Question ;
+    as:closed "2016-05-10T00:00:00+00:00"^^xsd:dateTime ;
+    as:name "What is the answer?" .
+
+[] a as:Question ;
+    as:closed "2016-05-10T00:00:00+00:00"^^xsd:dateTime ;
+    as:name "What is the answer?" .
+
+[] a as:Activity ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object [ a as:Note ;
+            as:name "A Note" ] ;
+    as:summary "Ngaio did something to a note" .
+
+[] a as:Video ;
+    as:duration "PT2H"^^xsd:duration ;
+    as:name "Puppy Plays With Ball" ;
+    as:url <http://example.org/video.mkv> .
+
+[] a as:Like ;
+    as:actor [ a as:Person ;
+            as:name "Ngaio" ] ;
+    as:object <http://example.org/notes/1> ;
+    as:summary "Ngaio liked a note" .
