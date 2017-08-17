@@ -778,6 +778,7 @@ def blockbrowser(request):
 @view_config(route_name='test', renderer='acme:templates/test.mako')
 def test(request):
     binfo = request.tmpl_context.coin['binfo']
+    sym = self.coin.symbol.lower()
     sparqlquery = \
         "http://localhost:3030/{}chain/sparql?query=SELECT+*+WHERE" \
         "+%7B%3Fs+%3Chttp%3A%2F%2Fpurl.org%2Fnet%2Fbel-epa%2Fccy%23height%3E+" \
