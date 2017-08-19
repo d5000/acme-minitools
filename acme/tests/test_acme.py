@@ -467,7 +467,7 @@ class AcmeTests(unittest.TestCase):
     def test_sparqlemission(self):
         sym = self.coin.symbol.lower()
         testnet = False
-        mainnetquery = """http://localhost.com:3030/{}chain/sparql?query=PREFIX+ccy%3A+%3Chttp%3A%2F%2Fpurl.org%2Fnet%2Fbel-epa%2Fccy%23%3E%0ASELECT+%3Fheight+%3Fdt%0AWHERE+%7B%0A++%3Fblock+ccy%3Aheight+%3Fheight+.%0A++%3Fblock+ccy%3Atime+%3Fdt.+%0A++FILTER(%3Fdt+%3C+{timestamp})%0A%7D%0AORDER+BY+DESC(%3Fdt)+LIMIT+1""".format(sym)
+        mainnetquery = """http://localhost:3030/{}chain/sparql?query=PREFIX+ccy%3A+%3Chttp%3A%2F%2Fpurl.org%2Fnet%2Fbel-epa%2Fccy%23%3E%0ASELECT+%3Fheight+%3Fdt%0AWHERE+%7B%0A++%3Fblock+ccy%3Aheight+%3Fheight+.%0A++%3Fblock+ccy%3Atime+%3Fdt.+%0A++FILTER(%3Fdt+%3C+{timestamp})%0A%7D%0AORDER+BY+DESC(%3Fdt)+LIMIT+1""".format(sym)
         testnetquery = """http://localhost:3030/{}tchain/sparql?query=PREFIX+ccy%3A+%3Chttp%3A%2F%2Fpurl.org%2Fnet%2Fbel-epa%2Fccy%23%3E%0ASELECT+%3Fheight+%3Fdt%0AWHERE+%7B%0A++%3Fblock+ccy%3Aheight+%3Fheight+.%0A++%3Fblock+ccy%3Atime+%3Fdt.+%0A++FILTER(%3Fdt+%3C+{timestamp})%0A%7D%0AORDER+BY+DESC(%3Fdt)+LIMIT+1""".format(sym)
         if testnet:
             query = testnetquery
