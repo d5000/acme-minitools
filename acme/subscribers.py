@@ -56,7 +56,6 @@ def handle_setup(event):
             'addnode={}\n'.format(node.get('addr')).replace(',', '')
             for node in request.tmpl_context.acmerpc.call('getpeerinfo')]
 
-    log.debug("{}".format(request.registry.settings['staticfiles']))
 
 
 def handle_teardown(event):
