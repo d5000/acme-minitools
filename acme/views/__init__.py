@@ -7,6 +7,7 @@ import pyqrcode
 import base64
 import io
 import requests
+import textwrap
 from collections import defaultdict
 from datetime import datetime
 from binascii import unhexlify
@@ -313,8 +314,8 @@ def blk(request):
                 if 'base' in tx[0]:
                     txid = tx[0].strip().split(' ')[0]
                     oitems['txids'].append(txid)
-                    cnt += """<span>{}: <a href="/tx/{}"><span>{}</span></a></span><br />""".format(
-                        k, txid, txid)
+                    cnt += """<span>{k}: <a href="{r}"><span>{i}</span></a></span><br />""".format(
+                        k=k, r=request.route_url('transaction', net=net, arg=txid), i=txid)
                     rtx = request.tmpl_context.acmerpc.call('getrawtransaction', txid, 1)
                     if not rtx:
                         pass
@@ -338,7 +339,7 @@ def blk(request):
                     ktime = datetime.fromtimestamp(v).isoformat()
                 else:
                     ktime = datetime.strptime(v, '%Y-%m-%d %H:%M:%S %Z').isoformat()
-                    cnt += '''<div>{}: <span>{}</span></span> <span class="glit">{}</div>'''.format(k, v, ktime)
+                cnt += '''<div>{}: <span>{}</span></span> <span class="glit">{}</div>'''.format(k, v, ktime)
                 oitems[k] = ktime
             else:
                 cnt += '''<div>{}: <span>{}</span></div>'''.format(k, v)
@@ -595,23 +596,22 @@ def addr(request):
 @view_config(route_name='publications', renderer='acme:templates/publications.mako')
 def pbs(request):
     binfo = request.tmpl_context.coin['binfo']
-    dumpq = """\
-# SPARQL query:
+    dumpq = textwrap.dedent("""\
+        # SPARQL query:
 
-PREFIX ccy: &lt;http://purl.org/net/bel-epa/ccy#&gt;
-SELECT ?tx ?bh ?txo ?dt ?asm
-WHERE {
-  ?tx ccy:output ?txo .
-  ?txo ccy:pkasm ?asm .
-  ?tx ccy:blockhash ?bh .
-  ?tx ccy:time ?dt .
-  FILTER regex(?asm, "OP_RETURN")
-} ORDER BY DESC(?dt)
+        PREFIX ccy: &lt;http://purl.org/net/bel-epa/ccy#&gt;
+        SELECT ?tx ?bh ?txo ?dt ?asm
+        WHERE {
+          ?tx ccy:output ?txo .
+          ?txo ccy:pkasm ?asm .
+          ?tx ccy:blockhash ?bh .
+          ?tx ccy:time ?dt .
+          FILTER regex(?asm, "OP_RETURN")
+        } ORDER BY DESC(?dt)
 
-# Results:
+        # Results:
 
-"""
-
+        """)
     query = request.tmpl_context.endpoint + "/" + \
         request.tmpl_context.dataset + "/sparql" + \
         "?query=PREFIX+ccy%3A+%3Chttp%3A%2F%2Fpurl.org%2Fnet%2Fbel-epa%2Fccy" \
