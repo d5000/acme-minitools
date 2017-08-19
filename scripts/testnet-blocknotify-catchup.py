@@ -39,7 +39,7 @@ class TestCatchUp(blocknotifybase.TestNotifyCase):
                 fp.write(self.g.serialize(format="nt").decode('utf-8'))
             fp.close()
             subprocess.getstatusoutput(
-                "/opt/acme/fuseki/bin/s-post http://localhost:3030/{s}tchain/data default /tmp/{s}t.nt".format(s=sym))
+                "/opt/acme/fuseki2/bin/s-post http://localhost:3030/{s}tchain/data default /tmp/{s}t.nt".format(s=sym))
             os.unlink("/tmp/{s}t.nt".format(s=sym))
 
 if __name__ == "__main__":

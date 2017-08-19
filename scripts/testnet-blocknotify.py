@@ -38,7 +38,7 @@ class TestTestnetBlockNotify(blocknotifybase.TestNotifyCase):
             with open('/tmp/{s}t{h}.nt'.format(s=symbol, h=blockhash), 'w') as fp:
                 fp.write(self.g.serialize(format="nt").decode('utf-8'))
             subprocess.getstatusoutput(
-                "/opt/acme/fuseki/bin/s-post http://localhost:3030/{s}tchain/data default /tmp/{s}t{h}.n3".format(
+                "/opt/acme/fuseki2/bin/s-post http://localhost:3030/{s}tchain/data default /tmp/{s}t{h}.n3".format(
                     s=symbol, h=blockhash))
             os.unlink('/tmp/{s}t{h}.nt'.format(s=symbol, h=blockhash))
 

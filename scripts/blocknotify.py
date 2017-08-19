@@ -29,7 +29,7 @@ class TestCatchUp(blocknotifybase.TestNotifyCase):
                 with open('/tmp/{s}.nt'.format(s=sym), 'w') as fp:
                     fp.write(self.g.serialize(format="nt").decode('utf-8'))
                 subprocess.getstatusoutput(
-                    "/opt/acme/fuseki/bin/s-post http://localhost:3030/{s}chain/data default /tmp/{s}.nt".format(s=sym)
+                    "/opt/acme/fuseki2/bin/s-post http://localhost:3030/{s}chain/data default /tmp/{s}.nt".format(s=sym)
                 os.unlink("/tmp/{s}.nt".format(s=sym))
 
 
