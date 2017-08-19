@@ -203,7 +203,7 @@
       </tr>
     </thead>
     <tbody>
-    %for bnum, bhash, bdiff, prooftype, bblock, btime, binterval, txc, vout in blocks[:6]:
+    %for bnum, bhash, bdiff, prooftype, bblock, btime, binterval, txc, vout in blocks[:10]:
     <tr class="illu">
       <td><i class="yellow cube icon"></i> ${bnum}</td>
       <td><a href="${request.route_url('block', net=net, arg=bhash)}">${bhash[:16]} ...</a></td>
