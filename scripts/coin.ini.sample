@@ -1,0 +1,14 @@
+[mainnet]
+symbol=SLM
+rpcuser=
+rpcpass=
+rpcport=41683
+genesis=C00000766be5a4bb74c040b85a98d2ba2b433c5f4c673912b3331ea6f18d61bea
+
+[testnet]
+symbol=SLMT
+genesis=
+
+[dirs]
+fuseki=
+data=

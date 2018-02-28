@@ -1,4 +1,10 @@
 #!/bin/bash
-BLOCKHASH="$@" /opt/acme/slimcoin-acme/bin/python3 /opt/acme/slimcoin-acme/acme/scripts/blocknotify.py  > /opt/acme/log/blocknotify.log 2>&1
-echo "${@}" >> /opt/acme/log/slm-blocknotify.log
+
+SCRIPTDIR=${HOME}/Apps/slimcoin-fuseki/acme-minitools
+
+(
+  flock -n 9 || exit 1
+  cd ${SCRIPTDIR}
+  /usr/bin/python3 block2rdf-cli.py -b ${1} -P -L -v
+) 9>/var/lock/blocknotify_pub
 

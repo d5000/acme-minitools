@@ -1,10 +1,19 @@
 #! /usr/bin/env python3
-import unittest
+"""Second version without unittest.
+
+This script is able to delete entire blocks.
+It does not delete address graphs entirely; only the transactions associated to it. This should only be relevant if there's a double spend; in this case an empty address will stay recorded in the dataset that must be deleted manually.
+"""
 from datetime import datetime, timedelta, tzinfo
+from pathlib import Path
 import json
+import sys
 import re
 import requests
 import time
+import subprocess
+import binascii
+import os
 from rdflib import (
     Namespace,
     URIRef,
@@ -14,10 +23,16 @@ from rdflib import (
 from rdflib.namespace import RDF, XSD, SKOS
 import configparser
 
+# reads configuration file and creates dictionaries "mainnet" and "testnet"
 config = configparser.ConfigParser()
 config.read('coin.ini')
+
 mainnet = dict((key, config['mainnet'][key]) for key in config['mainnet'])
 testnet = dict((key, config['testnet'][key]) for key in config['testnet'])
+
+
+fusekidir = config["dirs"]["fuseki"]
+datadir = config["dirs"]["data"]
 
 global blockhash
 debug = False
@@ -25,12 +40,14 @@ test = False
 
 
 class RPCHost(object):
+    """Class defining a 'host' for remote procedure calls."""
     def __init__(self, url):
         self._session = requests.Session()
         self._url = url
         self._headers = {'content-type': 'application/json'}
 
     def call(self, rpcMethod, *params):
+        """RPC call using the Bitcoin JSON RPC API."""
         payload = json.dumps({"method": rpcMethod, "params": list(params), "jsonrpc": "2.0"})
         tries = 10
         hadConnectionFailures = False
@@ -62,6 +79,7 @@ class GMT1(tzinfo):
         return timedelta(hours=1) + self.dst(dt)
 
     def dst(self, dt):
+        """Daylight saving time."""
         # DST starts last Sunday in March
         d = datetime(dt.year, 4, 1)   # ends last Sunday in October
         self.dston = d - timedelta(days=d.weekday() + 1)
@@ -74,6 +92,9 @@ class GMT1(tzinfo):
 
     def tzname(self, dt):
         return "GMT +1"
+
+## data initialization
+# block variables # without hash, nonce, confirmations, bits.
 
 blockfields = [
     'size',
@@ -90,6 +111,7 @@ blockfields = [
     'nextblockhash',
 ]
 
+# initial data for Slimcoin
 
 doacc_rubric_n3 = """
 @prefix dc: <http://purl.org/dc/elements/1.1/> .
@@ -138,6 +160,8 @@ doacc:Dede0f611-3a23-4794-b768-0740933a5ff6 a doacc:Protocol ;
     skos:prefLabel "bitcoin"@en .
 """
 
+# ontology scheme for block variables
+
 blockprops = dict(
     bits="http://purl.org/net/bel-epa/ccy#bits",
     confirmations="http://purl.org/net/bel-epa/ccy#confirmations",
@@ -157,6 +181,7 @@ blockprops = dict(
     transition="http://purl.org/net/bel-epa/ccy#transition",
 )
 
+# datatypes for block variables
 
 blockpropdata = dict(
     bits=XSD.hexBinary,
@@ -177,6 +202,8 @@ blockpropdata = dict(
     version=XSD.integer,
 )
 
+# URI formats for CCY and DOACC ("Description of a Cryptocurrency") ontologies
+
 ccy_urif = "http://purl.org/net/bel-epa/ccy#C{}"
 doacc_urif = "http://purl.org/net/bel-epa/doacc#D{}"
 hexaPattern = re.compile(r'^([0-9a-fA-F]+)$')
@@ -184,27 +211,142 @@ CCY = Namespace("http://purl.org/net/bel-epa/ccy#")
 DOACC = Namespace("http://purl.org/net/bel-epa/doacc#")
 
 
-class TestNotifyCase(unittest.TestCase):
-    def setUp(self):
-        self.g = Graph()
-        self.g.bind("", "http://purl.org/net/bel-epa/ccy#")
-        self.g.bind("doacc", "http://purl.org/net/bel-epa/doacc#")
-        self.g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
+class RDFChainProcessor(object):
 
-    def setConn(self, network=None):
+    def sparql_query(self, sparql_string, dataset, mode="select"):
+        """SPARQL SELECT and CONSTRUCT queries."""
+        query = "{f}/bin/s-query --service='http://localhost:3030/{s}chain/query' '{q}'".format(f=fusekidir, s=dataset, q=sparql_string)
+        output = subprocess.getoutput(query)
+        try:
+            if mode == "select": 
+                result = json.loads(output)
+            else:
+                result = output
+        except Exception as e:
+            raise Exception("{}. Fuseki server probably not running.".format(e))
+        return result
+
+    def sparql_update(self, sparql_string, dataset, mode="delete"):
+        """SPARQL DELETE (and possibly other operations)."""
+        try:
+            query = "{f}/bin/s-update --service='http://localhost:3030/{s}chain/update' '{q}'".format(f=fusekidir, s=dataset, q=sparql_string)
+            output = subprocess.getstatusoutput(query)
+        except Exception as e:
+            raise Exception("{}. Fuseki server probably not running.".format(e))
+        return output
+
+
+    def change_chaingraph(self, dataset):
+        """Adds triples to the RDF blockchain dataset."""
+        if test:
+            n3graph = self.g.serialize(format="n3").decode('utf-8')
+            print(n3graph)
+            
+        else:
+            ntgraph = self.g.serialize(format="nt").decode('utf-8')
+            with open('/tmp/{s}.nt'.format(s=dataset), 'w') as fp:
+                fp.write(ntgraph)
+
+            subprocess.getstatusoutput(
+            fusekidir + "/bin/s-post http://localhost:3030/{s}chain/data default /tmp/{s}.nt".format(s=dataset))
+            os.unlink("/tmp/{s}.nt".format(s=dataset))
+
+
+    def get_chaingraph_block(self, blockhash, dataset):
+        """Delivers graph of a complete block from the RDF blockchain."""
+        block = 'ccy:C' + blockhash
+        bg = Graph()
+        query_string = 'PREFIX ccy: <http://purl.org/net/bel-epa/ccy#> CONSTRUCT {{ {b} ?bp ?bo . ?tx ?tp ?to . ?txi ?tip ?tio . ?txo ?top ?too }} WHERE {{ {b} ?bp ?bo . ?tx ccy:blockhash {b} . ?tx ?tp ?to . ?tx ccy:input ?txi . ?tx ccy:output ?txo . ?txi ?tip ?tio . ?txo ?top ?too . }}'.format(b=block)
+
+        blockgraph = self.sparql_query(query_string, dataset, "construct")
+        bg.parse(data=blockgraph, format="turtle")
+
+        return bg
+
+    def delete_chaingraph_block(self, blockhash, dataset):
+        """Deletes a complete block from the RDF blockchain, including transactions, inputs and outputs. TODO: Address graphs are not deleted, only the related TX entries included in orphans."""
+        block = 'ccy:C' + blockhash
+        update_string = 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX ccy: <http://purl.org/net/bel-epa/ccy#> DELETE {{ {b} ?bp ?bo . ?tx ?tp ?to . ?txi ?tip ?tio . ?txo ?top ?too . ?addr ccy:tx ?tx }} WHERE {{ {b} ?bp ?bo . ?tx ccy:blockhash {b} . ?tx ?tp ?to . ?tx ccy:input ?txi . ?tx ccy:output ?txo . ?txi ?tip ?tio . ?txo ?top ?too . OPTIONAL {{ ?addr rdf:type ccy:Address . ?addr ccy:tx ?tx }} }}'.format(b=block)
+        status = self.sparql_update(update_string, dataset)
+        return status
+
+    def get_chaingraph_height(self, dataset):
+        """Gets last block height from the Blockchain graph."""
+        sparql_string = 'PREFIX ccy: <http://purl.org/net/bel-epa/ccy#> SELECT ?height ?block WHERE { ?block ccy:height ?height } ORDER BY DESC(?height) LIMIT 1'
+
+        result = self.sparql_query(sparql_string, dataset)
+        try:
+            height = int(result["results"]["bindings"][0]["height"]["value"])
+            blockhash = result["results"]["bindings"][0]["block"]["value"].replace(ccy_urif.format(""),"")
+            return {"rdf_height":height, "rdf_blockhash":blockhash}
+        except IndexError:
+            return None # if genesis block is still not built
+
+
+class BlockChainProcessor(object):
+    def __init__(self, network=None):
+        """Setting up coin initialization and connection variables."""
         self.ecoin = mainnet if network is None else network
         self.doacc = URIRef("http://purl.org/net/bel-epa/doacc#Dc74ed816-06ae-4b2a-b51a-3ac190810b1e")
         self.serverurl = 'http://{}:{}@localhost:{}/'.format(
             self.ecoin.get('rpcuser'), self.ecoin.get('rpcpass'), self.ecoin.get('rpcport'))
         self.amerpc = RPCHost(self.serverurl)
 
-    def tearDown(self):
-        pass
+        # def setInitialData(self):
+        self.blockchain = URIRef(ccy_urif.format(self.ecoin.get('genesis')[2:])) # BlockChain object
+        self.binfof, self.binfo = self.dobinfo()
 
-    # // ppcoin: the coin stake transaction is marked with the first output empty
+    def setUpGraph(self):
+        self.g = Graph()
+        self.g.bind("", "http://purl.org/net/bel-epa/ccy#")
+        self.g.bind("doacc", "http://purl.org/net/bel-epa/doacc#")
+        self.g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
+
+    def start_new_chain(self):
+        self.setUpGraph()
+        self.g.add((self.blockchain, RDF.type, CCY.BlockChain))
+        self.g.add((self.blockchain, CCY.cryptocurrency, self.doacc))
+
+
+    def dobinfo(self):
+        """Gets 'getinfo' data."""
+        debug = False
+        try:
+            binfo = self.amerpc.call('getinfo')
+            if debug:
+                print(json.dumps(binfo, sort_keys=True, indent=2, separators=(',', ': ')))
+        except Exception as e:
+            raise Exception("{} getinfo failed for {}".format(e, self.ecoin))
+        binfof = [
+            "balance",
+            "blocks",
+            "connections",
+            "difficulty",
+            "errors",
+            "ip",
+            "keypoololdest",
+            "keypoolsize",
+            "moneysupply",
+            "newmint",
+            "paytxfee",
+            "protocolversion",
+            "proxy",
+            "stake",
+            "testnet",
+            "version",
+            "walletversion"
+        ]
+        return binfof, binfo
 
     def dotxvi(self, txid, tx, txvi, txnode, s):
-        txinnode = URIRef(ccy_urif.format(txid + '-I-' + str(s)))
+        """Stores transaction inputs in graph.
+           txid = transaction id
+           tx = transaction dictionary
+           txvi = transaction input dictionary
+           txnode = transaction as RDF node
+           s = txvi["n"] (index of input)
+        """
+        txinnode = URIRef(ccy_urif.format(txid + '-I-' + str(s))) # RDF node for tx input
         if debug:
             print("....")
             print(json.dumps(txvi, sort_keys=True, indent=2, separators=(',', ': ')))
@@ -216,15 +358,22 @@ class TestNotifyCase(unittest.TestCase):
         if 'coinbase' in txvi:
             self.g.add((txinnode, CCY.coinbase, Literal(txvi.get('coinbase'), datatype=XSD.hexBinary)))
             # Link to address
-            # g.add((anode, CCY.tx, tnode))
-            # g.add((anode, CCY.txinput, txinnode))
+            # self.g.add((anode, CCY.tx, tnode))
+            # self.g.add((anode, CCY.txinput, txinnode))
         else:
-            self.g.add((txinnode, CCY.txid, URIRef('C' + txvi.get('txid'))))
+            self.g.add((txinnode, CCY.txid, URIRef(ccy_urif.format(txvi.get('txid'))))) 
             self.g.add((txinnode, CCY.nvout, Literal(txvi.get('vout'), datatype=XSD.integer)))
             self.g.add((txinnode, CCY.ssasm, Literal(txvi.get('scriptSig').get('asm'), datatype=XSD.string)))
             # self.g.add((txinnode, CCY.sshex, Literal(txvi.get('scriptSig').get('hex'), datatype=XSD.hexBinary)))
 
     def dotxvo(self, txid, tx, txvo, txnode, s):
+        """Stores transaction outputs in graph.
+           txid = transaction id
+           tx = transaction dictionary
+           txvi = transaction output dictionary
+           txnode = transaction as RDF node
+           s = txvo["n"] (index of output)
+        """
         txoutnode = URIRef(ccy_urif.format(txid + '-O-' + str(s)))
         self.g.add((txoutnode, RDF.type, CCY.TransactionOutput))
         self.g.add((txnode, CCY.output, txoutnode))
@@ -256,19 +405,31 @@ class TestNotifyCase(unittest.TestCase):
                 self.g.add((anode, CCY.tx, txnode))
                 # self.g.add((anode, CCY.txoutput, txoutnode))
 
+
+
     def dogetrawtransaction(self, txid, nheight):
+        """Gets raw transaction JSON. Separated as this is relatively expensive and needed to know OP_RETURN/burn blocks."""
+
+        tx = self.amerpc.call('getrawtransaction', txid, 1) # gets raw transaction from node
+        if debug:
+            print(json.dumps(tx, sort_keys=True, indent=2, separators=(',', ': ')))
+
+        return tx
+        
+
+    def storetransaction(self, tx):
+        """Stores transaction data in the RDF graph."""
+
         txkeys = dict(
             hex=XSD.hexBinary,
             version=XSD.integer,
             time=XSD.integer,
             locktime=XSD.integer,
             confirmations=False,
-            blocktime=XSD.dateTimeStamp)
+            blocktime=XSD.dateTimeStamp,
+            blockhash=XSD.hexBinary)
 
-        tx = self.amerpc.call('getrawtransaction', txid, 1)
-        if debug:
-            print(json.dumps(tx, sort_keys=True, indent=2, separators=(',', ': ')))
-        txnode = URIRef(ccy_urif.format(txid))
+        txnode = URIRef(ccy_urif.format(txid)) # transaction as an RDF node
         self.g.add((txnode, RDF.type, CCY.Transaction))
 
         for txk, dt in txkeys.items():
@@ -292,36 +453,13 @@ class TestNotifyCase(unittest.TestCase):
         for s, txvo in enumerate(tx.pop('vout', [])):
             self.dotxvo(txid, tx, txvo, txnode, txvo.get('n'))
 
-    def dobinfo(self):
-        debug = False
-        try:
-            binfo = self.amerpc.call('getinfo')
-            if debug:
-                print(json.dumps(binfo, sort_keys=True, indent=2, separators=(',', ': ')))
-        except Exception as e:
-            raise Exception("{} getinfo failed for {}".format(e, self.ecoin))
-        binfof = [
-            "balance",
-            "blocks",
-            "connections",
-            "difficulty",
-            "errors",
-            "ip",
-            "keypoololdest",
-            "keypoolsize",
-            "moneysupply",
-            "newmint",
-            "paytxfee",
-            "protocolversion",
-            "proxy",
-            "stake",
-            "testnet",
-            "version",
-            "walletversion"
-        ]
-        return binfof, binfo
+    def showrawtransaction(self, txid, nheight): # deprecated
+       """Workaround."""
+       return str(self.amerpc.call('getrawtransaction', txid, 1))
+
 
     def dobtime(self, bk):
+        """Formats block timestamp."""
         # Split off into separate method?
         try:
             btime = datetime.strptime(
@@ -331,6 +469,7 @@ class TestNotifyCase(unittest.TestCase):
         return int(btime.timestamp())
 
     def getblockhash(self, nheight):
+        """Gets block hash from RPC API for a certain block height."""
         debug = False
         try:
             bhash = self.amerpc.call('getblockhash', nheight)
@@ -340,17 +479,49 @@ class TestNotifyCase(unittest.TestCase):
         except Exception as e:
             raise Exception("{} getblockhash failed for {}".format(e, self.ecoin))
 
-    def readblock(self, blockhash):
+    def getblockdata(self, blockhash):
+        bk = self.amerpc.call("getblock", blockhash)
+        return bk
+
+
+    def readblock(self, blockhash, mode="mainnet"):
+        """Gets block data and stores it in the graph."""
         block = URIRef(ccy_urif.format(str(blockhash)))
-        self.g.add((block, RDF.type, CCY.Block))
+
         bk = self.amerpc.call('getblock', blockhash)
         if debug:
             print(json.dumps(bk, sort_keys=True, indent=2, separators=(',', ': ')))
+
         txs = bk.pop('tx', [])
         nheight = bk.get('height', 0)
+
+        txdata = (self.dogetrawtransaction(txid, nheight) for txcnt, txid in enumerate(txs))
+
+
         if nheight == 0:
             txs = txs[:2]
 
+
+
+        elif mode in ("pub", "burn"):
+            # Special modes: publications or burn address
+            # For now, it uses a dirty workaround (full text search in transaction JSON).
+            # If nheight = 0, genesis block is processed everytime.
+            if mode == "pub":
+               searchstring = "OP_RETURN"
+            elif mode == "burn":
+               searchstring = "SfSLMCoinMainNetworkBurnAddr1DeTK5"
+            for tx in txdata:
+                txstring = str(tx)
+                if searchstring in txstring:
+                   break
+            else:
+                print("{} not found at height {}.".format(searchstring, nheight))
+                return
+
+        # Writing graph
+        # self.setUpGraph() # new graph for every block
+        self.g.add((block, RDF.type, CCY.Block))
         for ks in blockfields:
 
             k = ks.lower()
@@ -384,6 +555,9 @@ class TestNotifyCase(unittest.TestCase):
                 self.g.add(
                     (block, URIRef(blockprops.get(k)),
                         URIRef(CCY['C' + val])))
+                self.g.add(
+                    (URIRef(CCY['C' + val]),
+                        URIRef(blockprops.get('nextblockhash')), block))
             elif k == 'nextblockhash' and val is not None:
                 self.g.add(
                     (block, URIRef(blockprops.get(k)),
@@ -398,8 +572,12 @@ class TestNotifyCase(unittest.TestCase):
                 except Exception as e:
                     print("Ooops {} {}".format(e, k))
                     raise Exception(e)
+
         if nheight == 0:
             rawtx = "010000009d508653010000000000000000000000000000000000000000000000000000000000000000ffffffff0e049e5086530101062f503253482fffffffff01c07a8102000000002321038a52f85595a8d8e7c1d8c256baeee2c9ea7ad0bf7fe534575be4eb47cdbf18f6ac00000000"
         else:
-            for txcnt, txid in enumerate(txs):
-                self.dogetrawtransaction(txid, nheight)
+            #for txcnt, txid in enumerate(txs):
+            #    self.dogetrawtransaction(txid, nheight)
+            for tx in txdata:
+                self.storerawtransaction(tx["hash"], nheight)
+
