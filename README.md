@@ -12,10 +12,12 @@ The ACME Mini-Tools "translate" the output of the JSON RPC from Slimcoin to the 
 
 There are two main "methods" to run the Mini-Tools:
 
-* as a blocknotify script. Each time the Slimcoin client detects a new block, the script is invoked.
-* manually by the user via the command line. This is useful when a major "catchup" is needed. The script provides some options to control the block processing.
+* as a blocknotify script (notify mode). Each time the Slimcoin client detects a new block, the script can be invoked to add the block to the RDF blockchain graph. To prevent that multiple blocknotify scripts run at the same time, a bash script (**blocknotify.sh**) is provided that provides a lock file mechanism via flock.
+* manually by the user via the command line (catchup mode). This is useful when a major "catchup" is needed. The script provides some options to control the block processing.
 
 The script can check for blockchain reorganizations: If a block stored at the dataset is detected that was discarded as an orphan (stale block) by the client, it "rolls back" the RDF blockchain deleting the last block entries, until the last common block is found.
+
+If block2rdf-cli, in notify mode, finds out that the last checked block lies behind the height of the newest block, it will start a catchup automatically.
 
 A KeyboardInterrupt will end the script and transfer the already processed data to Fuseki.
 
@@ -25,7 +27,7 @@ The file **coin.ini** contains the basic configuration. Rename **coin.ini.sample
 
 ## Special modes
 
-The script can create partial blockchain datasets. This is meant to provide a better performance / lesser load for some applications. There are two modes, adopted to the Slimcoin blockchain:
+The script can create partial blockchain datasets. This is meant to provide a better performance / lesser load for some applications. There are two modes, adapted to the Slimcoin blockchain:
 
 * **Publication mode:** The script only saves blocks that contain OP_RETURN transactions. This is useful for Web2Web gateways and other apps that track publications.
 * **Burn address following mode:** (specific for Slimcoin's Proof-of-Burn concept) The script only saves blocks that contain burn transactions. This is useful to follow not only the amount of burnt coins, but also to control the available supply of the currency, because burnt coins are taken out of circulation forever.
@@ -39,9 +41,9 @@ The current way these special modes work should be seen as **unstable**. Later v
 * blocknotifybase.py: Provides the basic classes and methods for the tools to work.
 * block2rdf-cli.py: Provides a simple command line interface. This script can be invoked as a simpĺe blocknotify script (via the -b option) or used manually as a catchup script.
 
+
 ## Missing features (can be added later)
 
 * The script does not check the whole RDF blockchain for consistency, only a reorg-check for the last processed block is provided.
-* There is no automatic mode which decides if the "blocknotify" or the "catchup" mode is used. If a catchup is required, it must be invoked manually by the user. In the case of an outage, or even a large reorganization, this *can* lead to incomplete blockchain datasets, if the Slimcoin client continues to invoke the blocknotify script while the RDF blockchain is not updated to the last block. However, a manual catchup should be always able to repair the dataset.
 * There is no "catchup and delete old RDF chain" mode. Every time the script is invoked - with the exception of reorg checks - the block data is added to the RDF dataset, without deleting the existing data.
 * Address entries in the RDF blockchain are not completely deleted when a reorganized blockchain is "rolled back"; only the associated transactions are deleted. This should only be an issue if there are double spends, in this case, unused address entries could be created.
