@@ -6,7 +6,8 @@ It does not delete address graphs entirely; only the transactions associated to 
 """
 from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
-import json
+import simplejson as json # needed for Decimal conversions, test if it breaks something
+# import json
 import sys
 import re
 import requests
