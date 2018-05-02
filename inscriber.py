@@ -14,16 +14,14 @@ TODO: What is "face0100"? Why is it not seen as an "inscription" or "message" wi
 """
 
 from blocknotifybase import RPCHost, mainnet, testnet
-import simplejson as json # Decimals
 import argparse
 import sys
 import binascii
 from decimal import Decimal
-
-global MIN_FEE
+import simplejson as json
 
 MIN_FEE = Decimal("0.01") # minimal fee for transactions
-SLIMTOSHI = Decimal("0.000001") # only 6 decimals # MAYBE this is sufficient as additional cost for an OP_RETURN tx - there is a minimum value of the transaction amount minus change address (see: https://bitcointalk.org/index.php?topic=1141676.535 )
+SLIMTOSHI = Decimal("0.000001") # only 6 decimals
 
 
 def le_to_be(string):
@@ -218,11 +216,6 @@ def main():
     parser.add_argument("--rawopreturn", "-R", action="store_true", help="Creates a standard OP_RETURN message without the magic bytes for messages taken from Fusioncoin. Will not be recognized as a 'message' by the Slimcoin client, but provides 4 bytes more space.")
     args = parser.parse_args()
 
-    if args.testnet == True:
-       network = testnet
-    else: # disabled for security reasons until it's well tested
-       network = mainnet
-
     global host
     global quiet
     global newaddress
@@ -230,6 +223,11 @@ def main():
     quiet = args.quiet
     newaddress = args.newaddress
     raw = args.rawopreturn
+
+    if args.testnet == True:
+       network = testnet
+    else:
+       network = mainnet
     
     host = RPCHost('http://{}:{}@localhost:{}/'.format(network.get("rpcuser"), network.get("rpcpass"), network.get("rpcport")))
 

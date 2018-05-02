@@ -6,8 +6,13 @@ It does not delete address graphs entirely; only the transactions associated to 
 """
 from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
-import simplejson as json # needed for Decimal conversions, test if it breaks something
-# import json
+
+try:
+    import simplejson as json # needed for Decimal conversions, test if it breaks something
+except ImportError:
+    import json
+
+
 import sys
 import re
 import requests
@@ -30,7 +35,6 @@ config.read('coin.ini')
 
 mainnet = dict((key, config['mainnet'][key]) for key in config['mainnet'])
 testnet = dict((key, config['testnet'][key]) for key in config['testnet'])
-
 
 fusekidir = config["dirs"]["fuseki"]
 datadir = config["dirs"]["data"]
