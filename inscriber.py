@@ -8,9 +8,8 @@ This version needs a Slimcoin client running.
 License: MIT, creators: The Slimcoin Developers
 
 
-TODO: What is "face0100"? Why is it not seen as an "inscription" or "message" without it?
-- it seems to be a data format described in smalldata.cpp/smalldata.h
-- there are two formats: SMALLDATA_TYPE_PLAINTEXT and SMALLDATA_TYPE_BROADCAST
+TODO:
+- the three-output format doesn't work (it seems to be not accepted by the network).
 """
 
 from blocknotifybase import RPCHost, mainnet, testnet
@@ -22,6 +21,7 @@ import simplejson as json
 
 MIN_FEE = Decimal("0.01") # minimal fee for transactions
 SLIMTOSHI = Decimal("0.000001") # only 6 decimals
+LOCKTIME = "00000000"
 
 
 def le_to_be(string):
@@ -30,7 +30,7 @@ def le_to_be(string):
     blist = [string[i:i+n] for i in range(0, len(string), n)]
     return "".join(blist[::-1])
 
-def get_balances(addresslist=None, only_possible=True):
+def get_balances(host, addresslist=None, only_possible=True):
     """Gets the balances of all addresses in the wallet. The only_possible flag checks if the address contains at least one UTXO with sufficient balance for the fees."""
     global utxol # utxo list is needed several times
 
@@ -84,7 +84,34 @@ def create_opreturn_hash(content):
     insc_bytes = content.encode()
     return binascii.hexlify(insc_bytes).decode("utf-8")
 
-def create_opreturn_tx(address, content, is_testnet=True):
+def create_single_opreturn_output(pre_tx, content):
+    """The single opreturn output mode is shorter and thus creates less blockchain bloat, but creates a nonstandard transaction, because the OP_RETURN transaction has a value."""
+    final_inputnum = "02"
+    opreturn_value = "1027000000000000" # 0.01
+    opreturn_scriptsig = create_opreturn_scriptsig(content)
+    opreturn_scriptsiglen_raw = int(len(opreturn_scriptsig) / 2)
+    opreturn_scriptsiglen = hex(opreturn_scriptsiglen_raw)[2:]
+    return final_inputnum + pre_tx["value1"] + pre_tx["scriptsig1_len"] + pre_tx["scriptsig1"] + opreturn_value + opreturn_scriptsiglen + opreturn_scriptsig
+
+def create_double_opreturn_output(pre_tx, content, o2_start, tx_raw):
+    """The double opreturn output mode is longer but creates a standard transaction with nulldata output."""
+    final_inputnum = "03"
+    opreturn_value = "1027000000000000" # 0.01
+    opreturn_scriptsig = create_opreturn_scriptsig(content)
+    opreturn_scriptsiglen_raw = int(len(opreturn_scriptsig) / 2)
+    opreturn_scriptsiglen = hex(opreturn_scriptsiglen_raw)[2:]
+  
+    print(o2_start)
+
+    scriptsig2_length = int(tx_raw[o2_start+16:o2_start+18], 16)
+    o2_end = o2_start + 18 + (scriptsig2_length * 2) # end of second ScriptSig
+    pre_tx.update({"value2":tx_raw[o2_start:o2_start+16], "scriptsig2_len":tx_raw[o2_start+16:o2_start+18], "scriptsig2":tx_raw[o2_start+18:o2_end]})
+
+    return final_inputnum + pre_tx["value1"] + pre_tx["scriptsig1_len"] + pre_tx["scriptsig1"] + pre_tx["value2"] + pre_tx["scriptsig2_len"] + pre_tx["scriptsig2"] + opreturn_value + opreturn_scriptsiglen + opreturn_scriptsig
+
+
+
+def create_opreturn_tx(host, address, content, is_testnet=True, threeoutputs=False, secondaddress=None):
     """Simplest way: create tx with first UTXO of selected address that has enough balance.
        Variant with only 2 outputs"""
 
@@ -98,21 +125,22 @@ def create_opreturn_tx(address, content, is_testnet=True):
                 # following partially https://bitcoin.stackexchange.com/questions/25224/what-is-a-step-by-step-way-to-insert-data-in-op-return/36439#36439
                 input_amount = Decimal(str(utxo["amount"]))
                 change_amount = input_amount - MIN_FEE*2
-
                 pre_tx_inputs = [{"txid":utxo["txid"], "vout":utxo["vout"]}]
-                if newaddress == True:
-                    change_address = host.call("getnewaddress")
+
+                if threeoutputs == False:
+                    pre_tx_outputs = {address:change_amount}
                 else:
-                    change_address = address
-                pre_tx_outputs = {change_address:change_amount}
+                    if newaddress == True:
+                        new_address = host.call("getnewaddress")
+                    elif secondaddress is not None:
+                        new_address = secondaddress
+                    else:
+                        new_address = address # "splitting" output on same address does not work.
+                    pre_tx_outputs = {new_address:MIN_FEE, address:change_amount}
 
                 tx_raw = host.call("createrawtransaction", pre_tx_inputs, pre_tx_outputs)
                 if not quiet:
-                    print("Preliminary transaction:", tx_raw)
-
-                # first_part_tx = tx_raw[:tx_raw.index("ffffffff02")] # works, but is a dirty hack.
-                # better look at transaction format:
-                # 4(tx_version) + 4(tx_ntime) + 1(input) + 32(prev_input) + 4(prev_output_num) + 1(script_len) + int(script_len, 16) + 4(sequence)
+                    print("Preliminary transaction:", tx_raw, len(tx_raw))
 
                 script_length = int(tx_raw[90:92], 16)
                 se = 92 + (script_length * 2) # script end
@@ -121,26 +149,23 @@ def create_opreturn_tx(address, content, is_testnet=True):
 
                 pre_tx = {
                 "tx_version" : tx_raw[:8], "tx_ntime" : tx_raw[8:16], "number_of_inputs" : tx_raw[16:18],
-                "tx_output_rev" : tx_raw[18:82], "prev_output_num" : tx_raw[82:90], "script_length" : tx_raw[90:92],
+                "input_tx_id" : tx_raw[18:82], "input_tx_num" : tx_raw[82:90], "script_length" : tx_raw[90:92],
                 "script" : tx_raw[92:se], "sequence" : tx_raw[se:se+8],
                 "number_of_outputs":tx_raw[se+8:se+8+2], 
-                "value1":tx_raw[se+10:se+26], "scriptsig1_len":tx_raw[se+26:se+28], "scriptsig1":tx_raw[se+28:s1e],
-                "block_locktime":tx_raw[s1e:s1e+8]
+                "value1":tx_raw[se+10:se+26], "scriptsig1_len":tx_raw[se+26:se+28], "scriptsig1":tx_raw[se+28:s1e]
                 }
                 if not quiet:
                     print(pre_tx)
                     print("Value Output Change Address (sat.):", int(le_to_be(pre_tx["value1"]), 16))
 
-
                 first_part_tx = tx_raw[:se + 8]
-                # variables to add
-                final_inputnum = "02"
-                opreturn_value = "1027000000000000" # 0.01
-                opreturn_scriptsig = create_opreturn_scriptsig(content)
-                opreturn_scriptsiglen_raw = int(len(opreturn_scriptsig) / 2)
-                opreturn_scriptsiglen = hex(opreturn_scriptsiglen_raw)[2:]
 
-                final_tx = first_part_tx + final_inputnum + pre_tx["value1"] + pre_tx["scriptsig1_len"] + pre_tx["scriptsig1"] + opreturn_value + opreturn_scriptsiglen + opreturn_scriptsig + pre_tx["block_locktime"]
+                if threeoutputs == False:
+                    second_part_tx = create_single_opreturn_output(pre_tx, content)
+                else:
+                    second_part_tx = create_double_opreturn_output(pre_tx, content, s1e, tx_raw)
+
+                final_tx = first_part_tx + second_part_tx + LOCKTIME
                 if not quiet:
                     print("Final transaction (hex)", final_tx)
 
@@ -148,7 +173,7 @@ def create_opreturn_tx(address, content, is_testnet=True):
 
 
 
-def create_opreturn_tx2(address, content, is_testnet=True): # CURRENTLY NOT USED
+def create_opreturn_tx2(host, address, content, is_testnet=True): # CURRENTLY NOT USED
     """Simplest way: create tx with first UTXO of selected address that has enough balance.
        This uses the "data" field of the raw transaction API - this still DOESN'T work, perhaps in 0.6"""
 
@@ -178,13 +203,13 @@ def load_standard_addresses():
     with open("inscriber-address.conf", "r") as fp:
         return json.load(fp)
 
-def addr_selection(standard=False):
+def addr_selection(host, standard=False):
     if standard:
         addresslist = load_standard_addresses()
-        balances = get_balances(addresslist)
+        balances = get_balances(host, addresslist)
         print("Using standard addresses saved in inscriber-address.conf.")
     else:
-        balances = get_balances()
+        balances = get_balances(host)
         addresslist = list(balances.keys())
         print("Showing addresses with balances of more than {} SLM.".format(MIN_FEE))
     if len(addresslist) == 0:
@@ -198,32 +223,51 @@ def addr_selection(standard=False):
     selected_address = addresslist[int(selected) - 1]
     print("Selected address:", selected_address)
     return selected_address
+
+def test_content(content, raw=False):
+        if len(content) < 16:
+            if not quiet:
+                print("NOTE: Inscription shorter than 16 chars, filling with spaces.")
+
+            return content.ljust(16)
+        elif len(content) > 75:
+            raise Exception("Content longer than maximum length of 75 chars (smalldata: 71 chars).")
+        elif (raw == False) and (len(content) > 71):
+            raise Exception("Content longer than maximum length of 71 chars (smalldata format).")
+        else:
+            return content
         
 
 
-def main():
+def cli_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("content", type=str, help="The inscription content (e.g. torrent hash).")
     parser.add_argument("address", type=str, nargs="?", default=None, help="The address you want to use for your inscription. If you don't provide one, you can choose one in a dialog.")
+    parser.add_argument("secondaddress", type=str, nargs="?", default=None, help="The address you want to use for the second output (optional).")
     parser.add_argument("--load", "-l", action="store_true", help="Load a list of addresses saved in a JSON file (inscriber-address.conf).")
     parser.add_argument("--save", "-s", action="store_true", help="Save the list of possible addresses in a JSON file (inscriber-address.conf).")
     parser.add_argument("--testnet", "-t", action="store_true", help="Testnet mode.")
     parser.add_argument("--sign", "-S", action="store_true", help="Sign transaction (dangerous!)")
     parser.add_argument("--send", action="store_true", help="Send transaction (dangerous!)")
-    parser.add_argument("--newaddress", "-n", action="store_true", help="Use new address for change amount. Not recommended if using inscriptions regularly.")
+    parser.add_argument("--newaddress", "-n", action="store_true", help="Use new address for the auxiliary output (only three-output mode).")
+    parser.add_argument("--threeoutputs", "-3", action="store_true", help="Use three output mode.")
     parser.add_argument("--quiet", "-q", action="store_true", help="Quiet mode (for scripting).")
     parser.add_argument("--onlybalances", "-b", action="store_true", help="Only display address balances and exit.")
-    parser.add_argument("--rawopreturn", "-R", action="store_true", help="Creates a standard OP_RETURN message without the magic bytes for messages taken from Fusioncoin. Will not be recognized as a 'message' by the Slimcoin client, but provides 4 bytes more space.")
-    args = parser.parse_args()
+    parser.add_argument("--raw", "-R", action="store_true", help="Creates a standard OP_RETURN message without the magic bytes for messages taken from Fusioncoin. Will not be recognized as a 'message' by the Slimcoin client, but provides 4 bytes more space.")
+    return parser.parse_args()
 
-    global host
+def main(gui=False, gui_args=None):
+
     global quiet
     global newaddress
     global raw
+
+    args = cli_args()
+
+
     quiet = args.quiet
     newaddress = args.newaddress
-    raw = args.rawopreturn
-
+    raw = args.raw
     if args.testnet == True:
        network = testnet
     else:
@@ -232,32 +276,25 @@ def main():
     host = RPCHost('http://{}:{}@localhost:{}/'.format(network.get("rpcuser"), network.get("rpcpass"), network.get("rpcport")))
 
     if args.onlybalances == True:
-       print(get_balances())
+       print(get_balances(host))
        sys.exit()
 
-    if len(args.content) < 16:
-        content = args.content.ljust(16)
-        if not quiet:
-            print("NOTE: Inscription shorter than 16 chars, filling with spaces.")
-    elif len(args.content) > 80:
-        raise Exception("Content longer than maximum length of 80 chars.")
-    else:
-        content = args.content
+    content = test_content(args.content)
 
     if args.address is None:
-        address = addr_selection(args.load)
+        address = addr_selection(host, args.load)
     else:
-        if args.address not in get_balances().keys():
+        if args.address not in get_balances(host).keys():
             if quiet:
                 raise Exception("Address doesn't contain any input with enough balance.")
             else:
                 print("Error: Address must contain 0.02 SLM or more. Choose another one.")
-                address = addr_selection()
+                address = addr_selection(host)
         else:
             address = args.address
 
 
-    final_tx = create_opreturn_tx(address, content, args.testnet)
+    final_tx = create_opreturn_tx(host, address, content, args.testnet, args.threeoutputs, args.secondaddress)
     if not quiet:
 
         print("############# FINAL TRANSACTION ###############")
