@@ -12,6 +12,7 @@ import inscriber as i
 import sys
 from PyQt5.QtWidgets import QWidget, QToolTip, QPushButton, QGridLayout, QLineEdit, QLabel, QComboBox, QScrollArea, QApplication
 from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtCore import Qt
 
 
 class Inscriber(object):
@@ -23,10 +24,8 @@ class Inscriber(object):
 
         if "testnet" in sys.argv:
             self.network = testnet
-            self.testnet_flag = True
         else:
             self.network = mainnet
-            self.testnet_flag = False
 
         self.host = RPCHost('http://{}:{}@localhost:{}/'.format(self.network.get("rpcuser"), self.network.get("rpcpass"), self.network.get("rpcport")))
 
@@ -46,7 +45,7 @@ class Inscriber(object):
         print("Setting inscription: " + self.inscription)
 
     def create_tx(self):
-        self.rawtx = i.create_opreturn_tx(self.host, self.address, self.inscription, self.testnet_flag)
+        self.rawtx = i.create_opreturn_tx(self.host, self.address, self.inscription)
         self.rawtx_decoded = self.host.call("decoderawtransaction", self.rawtx)
 
     def sign_tx(self):
@@ -103,11 +102,13 @@ class MainWindow(QWidget):
         rawtx_infolabel = QLabel("Raw Transaction (hex):")
         rawtx_scrollarea = QScrollArea()
         rawtx_showlabel = QLabel(self.insc.rawtx)
+        rawtx_showlabel.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
         rawtx_scrollarea.setWidget(rawtx_showlabel)
 
         dectx_infolabel = QLabel("Raw Transaction (JSON):")
         dectx_scrollarea = QScrollArea()
         dectx_showlabel = QLabel(str(self.insc.rawtx_decoded))
+        dectx_showlabel.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
         dectx_scrollarea.setWidget(dectx_showlabel)
 
         sign_btn = QPushButton('Inscribe!', self)

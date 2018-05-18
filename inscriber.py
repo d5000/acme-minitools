@@ -10,6 +10,7 @@ License: MIT, creators: The Slimcoin Developers
 
 TODO:
 - the three-output format doesn't work (it seems to be not accepted by the network).
+- is_testnet can be deleted
 """
 
 from blocknotifybase import RPCHost, mainnet, testnet
