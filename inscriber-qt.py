@@ -29,11 +29,7 @@ INFODICT_ORDER = ("length", "name", "piece length", "pieces", "private") # this 
 # order: "d" + ANNOUNCE + ANNOUNCE_LIST + COMMENT + CREATED_BY + CREATION_DATE + INFO_HEADER + info_dict + URL_LIST + "e"
 ANNOUNCE = b"8:announce23:udp://explodie.org:6969"
 ANNOUNCE_LIST = b"13:announce-listll23:udp://explodie.org:6969el34:udp://tracker.coppersurfer.tk:6969el40:udp://tracker.leechers-paradise.org:6969el35:udp://tracker.openbittorrent.com:80el33:udp://tracker.opentrackr.org:1337el21:udp://zer0day.ch:1337el26:wss://tracker.btorrent.xyzel25:wss://tracker.fastcast.nzel32:wss://tracker.openwebtorrent.comee"
-COMMENT = b"7:comment24:Created by Slimcoin Team"
-CREATED_BY = b"10:created by15:WebTorrent/0098"
-CREATION_DATE = b"13:creation datei1527557849e"
 INFO_HEADER = b"4:info"
-URL_LIST = b"8:url-listl39:http://185.121.25.146/slimcoinblog.htmle"
 
 
 
@@ -83,8 +79,7 @@ class TorrentCreator(object):
         self.bencoded_infodict = self.bencode_dict(self.infodict, INFODICT_ORDER)
         self.infohash = sha1(self.bencoded_infodict).hexdigest()
         self.magnetlink = "magnet:?xt=urn:btih:" + self.infohash
-        self.metainfo = b"d" + ANNOUNCE + ANNOUNCE_LIST + COMMENT + CREATED_BY + CREATION_DATE + INFO_HEADER + self.bencoded_infodict + URL_LIST + b"e" # this becomes the torrent file
-        # self.metainfo = b"d" + ANNOUNCE + INFO_HEADER + self.bencoded_infodict + b"e" # minimal torrent for bugfixing
+        self.metainfo = b"d" + ANNOUNCE + ANNOUNCE_LIST + INFO_HEADER + self.bencoded_infodict + b"e" # this becomes the torrent file
 
     def util_collapse(self, data):
         """ Given an homogenous list, returns the items of that list
